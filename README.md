@@ -9,7 +9,7 @@ A pair of scripts I wrote to wrangle images I want to host.
 
 # What Does It Do?
 
-It downloads the image file, rotates it so that it is oriented correctly (if this is set), strips EXIF data, rescales it so the maximum dimension is 1024 pixels (the test files are from when it was 800), moves it to a directory named for year/month/day you fetched/imported the file, and shows you the URL it's now hosted on.
+It downloads the image file, rotates it so that it is oriented correctly (if this is set), strips EXIF data, rescales it so the maximum dimension is 1024 pixels (the test files are from when it was 800), moves it to a directory tree named for year/month/day you fetched/imported the file, and shows you the URL it's now hosted on.
 
 # Know This!
 
