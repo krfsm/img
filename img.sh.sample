@@ -1,0 +1,77 @@
+#!/bin/bash
+
+WIDTH=0
+HEIGHT=0
+SCALE=0
+TEMPDIR=/home/$USER/tmp/ # Script assumes this temp directory exists.
+FILENAME=""
+DEFAULT_NAME=""
+FILEURL=""
+TMPPATH=""
+DATEPATH=""
+URL=""
+SERVERPATH="/var/www/html/LOCALDIRECTORY/" # Add local directory here.
+BASEURL="https://host.example/" # Add your hosting domain here. 
+
+if [ ! -z "$1" ] ; then
+	FILEURL=$1
+else
+	read -r -e -p "Enter URL of image: " FILEURL
+fi
+
+if [ ! -z "$2" ] ; then
+	FILENAME=$2
+else
+	DEFAULT_NAME=`echo $FILEURL | awk -F/ '{print $NF}'`
+	read -r -e -p "Filename to use: " -i `echo $DEFAULT_NAME` FILENAME
+	printf "Downloading %s as %s\n" "$FILEURL" "$FILENAME"
+fi
+
+TMPPATH=$TEMPDIR$FILENAME
+DATEDIR=$(printf "`date +%Y`/`date +%m`/`date +%d`/")
+
+if ! [ -d "$SERVERPATH$DATEDIR" ] ; then
+	mkdir -p $SERVERPATH$DATEDIR
+fi
+
+URL=$BASEURL$DATEDIR
+SERVERPATH=$SERVERPATH$DATEDIR
+
+
+curl -s -o $TMPPATH $FILEURL
+jhead -autorot $TMPPATH
+
+WIDTH=$(identify -format "%w" $TMPPATH)
+HEIGHT=$(identify -format "%h" $TMPPATH)
+
+if [ "$WIDTH" -le 1024 ] && [ "$HEIGHT" -le 1024 ] ; then
+        printf "Both height and width less than 1024 pixels, just moving.\n"
+	convert -strip $TMPPATH $SERVERPATH$FILENAME
+	printf "%s%s\n" "$URL" "$FILENAME"
+elif [ "$WIDTH" -le 1024 ] ; then
+	SCALE=$(echo "scale=1; 102400/$HEIGHT" | bc)
+	printf "Height more than 1024 pixels, so scaling down to %s%% and moving.\n" "$SCALE"	
+	convert -strip $TMPPATH -resize $SCALE% $SERVERPATH$FILENAME
+	printf "%s%s\n" "$URL" "$FILENAME"
+elif [ "$HEIGHT" -le 1024 ] ; then
+	SCALE=$(echo "scale=1; 102400/$WIDTH" | bc)
+	printf "Width more than 1024 pixels, scaling down to %s%% and moving.\n" "$SCALE"
+	convert -strip $TMPPATH -resize $SCALE% $SERVERPATH$FILENAME
+	printf "%s%s\n" "$URL" "$FILENAME"
+else
+	printf "Both greater than 1024 pixels, scaling down to "
+	if [ "$WIDTH" -ge "$HEIGHT" ] ; then
+		SCALE=$(echo "scale=1; 102400/$WIDTH" | bc)
+		printf "%s%% of width and moving.\n" "$SCALE"
+		convert -strip $TMPPATH -resize $SCALE% $SERVERPATH$FILENAME
+		printf "%s%s\n" "$URL" "$FILENAME"
+	else
+		SCALE=$(echo "scale=1; 102400/$HEIGHT" | bc)
+                printf "%s%% of height and moving.\n" "$SCALE"
+		convert -strip $TMPPATH -resize $SCALE% $SERVERPATH$FILENAME
+		printf "%s%s\n" "$URL" "$FILENAME"
+	fi
+fi
+
+rm $TMPPATH
+
