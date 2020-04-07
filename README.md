@@ -22,4 +22,6 @@ You'll need to:
 
 `SERVERPATH` is for the script to know where your image host stores its files. `BASEURL` is the base part of the URL shown when the script is done.
 
+You might need permissions to write to the `SERVERPATH` directory, and probably want to run through it with `chmod` and `chown` every now and then to make sure everything's ship-shape.
+
 (Oh, and you need to have a server to run this on and host the images from.)
